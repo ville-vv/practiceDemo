@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+</body>
+
+<script type="text/javascript" src="VILEngine.js"></script>
+
+<script>
+
+    let counter  = 0;
+    let isConnect = false;
+    let handler = {
+        onConnect:function (e) {
+            isConnect = true;
+            console.log("handler connect success ", e);
+            var se = setInterval(function () {
+                if(isConnect === false){
+                    clearInterval(se);
+                }
+                console.log("setInterval", Date.now());
+                socket.send("web browser setInterval");
+            }, 3000)
+        },
+        onDisconnect:function (e) {
+            isConnect = false;
+            console.log("handler disconnect ", e);
+        },
+        onMsg:function (data) {
+            counter++;
+            if(counter >= 2000){
+                counter = 0;
+                console.log("handler receive message ", data)
+            }
+        }
+    };
+
+    let socket = new VIL.EngineSocket("ws://127.0.0.1:10215/ws", handler);
+
+
+</script>
+
+</html>

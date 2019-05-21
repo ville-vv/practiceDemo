@@ -1,0 +1,13 @@
+{
+    "time_out": 20,
+    "user_groups": [
+        {
+            "server": "192.168.1.2",
+            "name": "myown",
+            "port": 1234,
+            "password": "1234567",
+            "cipher": "AEAD_CHACHA20_POLY1305",
+            "time_out": 10
+        }
+    ]
+}
