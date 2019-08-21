@@ -3,7 +3,9 @@ package mysqlc
 import (
 	"database/sql"
 	"fmt"
-
+	"os"
+	"time"
+	"vilgo/vuid"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -84,3 +86,101 @@ func (m *MysqlClient) DeleteExample(id int) (err error) {
 	}
 	return
 }
+
+func (m *MysqlClient)InsertTestData() {
+	file, err := os.OpenFile("mysql_test_data.txt", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
+	defer file.Close()
+	if err != nil {
+		fmt.Printf("open file fail %s", err.Error())
+		return
+	}
+	sqlstr := "INSERT INTO vil_user.account(user_no, phone, email)values"
+	file.WriteString(sqlstr + "\n")
+	for i := 0; i < 1000000; i++ {
+		phone := fmt.Sprintf("190878%d", i)
+		sqlCmd := fmt.Sprintf("(%d, '%s', '%s'),", vuid.GenUUid(), phone, phone+"@test.com")
+
+		//fmt.Printf(sqlCmd)
+		//_, err := mysql.Db().Exec(sqlCmd)
+		//if err != nil {
+		//	fmt.Printf("mysql exec fail %s", err.Error())
+		//	return
+		//}
+
+		file.WriteString(sqlCmd + "\n")
+	}
+	file.WriteString(";")
+}
+
+func (m *MysqlClient)SelectForDulip() {
+	sqlbase := "SELECT * FROM vil_user.account WHERE user_no = %s;"
+	strList := []string{"73836420374208512", "73836419799588864", "73836419636011008", "73836419585679360", "73836419610845184", "73836424564318208", "73836424669175808", "73836424740478976", "73836424945999872",
+		"73836425277349888", "73836425378013184", "73836425625477120",
+		"73836425696780288", "73836425730334720", "73836425797443584", "73836425835192320", "73836425885523968", "73836426019741696", "73836426422394880", "73836426787299328", "73836427181563904"}
+	start := time.Now().UnixNano()
+	for _, v := range strList {
+		sqlcmd := fmt.Sprintf(sqlbase, v)
+		if _, err := m.db.Exec(sqlcmd); err != nil {
+			fmt.Printf("%s", err.Error())
+			return
+		}
+	}
+	end := time.Now().UnixNano()
+	fmt.Printf("SelectForDulip:查询实际时间%d", end-start)
+}
+
+func CompStr(slist []string, cstr string) (out string) {
+	for _, v := range slist {
+		if out == "" {
+			out = v
+		}
+		out = fmt.Sprintf("%s%s%s", out, cstr, v)
+	}
+	return out
+}
+func CompOr(slist []string, cstr string) (out string) {
+	for _, v := range slist {
+		if out == "" {
+			out = cstr + "=" + v
+		}
+		out = fmt.Sprintf("%s OR %s", out, cstr+"="+v)
+	}
+	return out
+}
+
+func (m *MysqlClient)SelectWithIn() {
+	sqlbase := "SELECT * FROM vil_user.account WHERE user_no in(%s);"
+	strList := []string{"73836420374208512", "73836419799588864", "73836419636011008", "73836419585679360", "73836419610845184", "73836424564318208", "73836424669175808", "73836424740478976", "73836424945999872",
+		"73836425277349888", "73836425378013184", "73836425625477120",
+		"73836425696780288", "73836425730334720", "73836425797443584", "73836425835192320", "73836425885523968", "73836426019741696", "73836426422394880", "73836426787299328", "73836427181563904"}
+
+	sqlcmd := fmt.Sprintf(sqlbase, CompStr(strList, ","))
+	fmt.Printf(sqlcmd)
+	start := time.Now().UnixNano()
+	if _, err := m.db.Exec(sqlcmd); err != nil {
+		fmt.Printf("%s", err.Error())
+		return
+	}
+	end := time.Now().UnixNano()
+	fmt.Printf("SelectWithIn:查询实际时间%d", end-start)
+
+}
+
+func (m *MysqlClient)SelectWithOr() {
+	sqlbase := "SELECT * FROM vil_user.account WHERE %s;"
+	strList := []string{"73836420374208512", "73836419799588864", "73836419636011008", "73836419585679360", "73836419610845184", "73836424564318208", "73836424669175808", "73836424740478976", "73836424945999872",
+		"73836425277349888", "73836425378013184", "73836425625477120",
+		"73836425696780288", "73836425730334720", "73836425797443584", "73836425835192320", "73836425885523968", "73836426019741696", "73836426422394880", "73836426787299328", "73836427181563904"}
+
+	sqlcmd := fmt.Sprintf(sqlbase, CompOr(strList, "user_no"))
+	fmt.Printf(sqlcmd)
+	start := time.Now().UnixNano()
+	if _, err := m.db.Exec(sqlcmd); err != nil {
+		fmt.Printf("%s", err.Error())
+		return
+	}
+	end := time.Now().UnixNano()
+	fmt.Printf("SelectWithOr:查询实际时间%d", end-start)
+
+}
+
