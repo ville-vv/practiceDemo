@@ -13,6 +13,7 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
+// genRsaKey make  rsa.PrivateKey rsa.PublicKey according to bits
 func genRsaKey(bits int) (*rsa.PrivateKey, *rsa.PublicKey, error) {
 	private, err := rsa.GenerateKey(rand.Reader, bits)
 	if err != nil {
@@ -21,6 +22,7 @@ func genRsaKey(bits int) (*rsa.PrivateKey, *rsa.PublicKey, error) {
 	return private, &private.PublicKey, nil
 }
 
+// encodePrivateKey rsa.PrivateKey converted  to pem data
 func encodePrivateKey(private *rsa.PrivateKey) []byte {
 	return pem.EncodeToMemory(&pem.Block{
 		Bytes:   x509.MarshalPKCS1PrivateKey(private),
@@ -29,6 +31,7 @@ func encodePrivateKey(private *rsa.PrivateKey) []byte {
 	})
 }
 
+// encodePublicKey rsa.PublicKey converted  to pem data
 func encodePublicKey(public *rsa.PublicKey) ([]byte, error) {
 	publicBytes, err := x509.MarshalPKIXPublicKey(public)
 	if err != nil {
@@ -41,6 +44,7 @@ func encodePublicKey(public *rsa.PublicKey) ([]byte, error) {
 	}), nil
 }
 
+// encodeSSHKey rsa.PublicKey converted  to ssh data
 func encodeSSHKey(public *rsa.PublicKey) ([]byte, error) {
 	publicKey, err := ssh.NewPublicKey(public)
 	if err != nil {
@@ -49,6 +53,22 @@ func encodeSSHKey(public *rsa.PublicKey) ([]byte, error) {
 	return ssh.MarshalAuthorizedKey(publicKey), nil
 }
 
+func parseSSHPublicKey(sKey []byte) (*rsa.PublicKey, error) {
+	pub, _, _, _, err := ssh.ParseAuthorizedKey(sKey)
+	if err != nil {
+		return nil, err
+	}
+	// 根据ssh源码查到 ssh.PublicKey 被 ssh.rsaPublicKey 实现
+	// 且 ssh.rsaPublicKey 实现了  ssh.CryptoPublicKey
+	// 所以先转换成 ssh.CryptoPublicKey 调用 CryptoPublicKey 得到  crypto.PublicKey
+	// *rsa.PublicKey 实现了 crypto.PublicKey
+	cr := pub.(ssh.CryptoPublicKey)
+	crPub := cr.CryptoPublicKey()
+	rsaPub := crPub.(*rsa.PublicKey)
+	return rsaPub, nil
+}
+
+// GenRsaKey Generating RSA Key Pairs
 func GenRsaKey(bits int) (private, public []byte, err error) {
 	privKey, pubKey, err := genRsaKey(bits)
 	if err != nil {
@@ -90,19 +110,23 @@ func GenSSHKeyPair() (private []byte, public []byte, err error) {
 	return
 }
 
+// SSHToPEM key pairs in SSH format converted to PEM format
 func SSHToPEM(skey []byte) (pemKey []byte, err error) {
 	pub, _, _, _, err := ssh.ParseAuthorizedKey(skey)
 	if err != nil {
 		return
 	}
+	// 根据ssh源码查到 ssh.PublicKey 被 ssh.rsaPublicKey 实现
+	// 且 ssh.rsaPublicKey 实现了  ssh.CryptoPublicKey
+	// 所以先转换成 ssh.CryptoPublicKey 调用 CryptoPublicKey 得到  crypto.PublicKey
+	// *rsa.PublicKey 实现了 crypto.PublicKey
 	cr := pub.(ssh.CryptoPublicKey)
 	crPub := cr.CryptoPublicKey()
-
 	rsaPub := crPub.(*rsa.PublicKey)
-
 	return encodePublicKey(rsaPub)
 }
 
+// PEMToSSH key pairs in PEM format converted to SSH format
 func PEMToSSH(pemKey []byte) (skey []byte, err error) {
 	//解密pem格式的公钥
 	block, _ := pem.Decode(pemKey)
@@ -119,28 +143,9 @@ func PEMToSSH(pemKey []byte) (skey []byte, err error) {
 	return encodeSSHKey(pub)
 }
 
-type Cipher interface {
-	// origData 明文
-	// Encrypt 加密
-	Encrypt(origData []byte) ([]byte, error)
-	// cipherData 密文
-	// Encrypt 解密
-	Decrypt(cipherData []byte) ([]byte, error)
-}
-
-type RsaCipher struct {
-	privateK []byte
-	publicK  []byte
-}
-
-func NewRsaCipher(privateK []byte, publicK []byte) *RsaCipher {
-	return &RsaCipher{privateK: privateK, publicK: publicK}
-}
-
-// 加密
-func (r *RsaCipher) Encrypt(origData []byte) ([]byte, error) {
+func encrypt(origData []byte, pbk []byte) ([]byte, error) {
 	//解密pem格式的公钥
-	block, _ := pem.Decode(r.publicK)
+	block, _ := pem.Decode(pbk)
 	if block == nil {
 		return nil, errors.New("public key error")
 	}
@@ -160,10 +165,9 @@ func (r *RsaCipher) Encrypt(origData []byte) ([]byte, error) {
 	}
 }
 
-// 解密
-func (r *RsaCipher) Decrypt(cipherData []byte) ([]byte, error) {
+func decrypt(enData []byte, pvk []byte) ([]byte, error) {
 	//解密
-	block, _ := pem.Decode(r.privateK)
+	block, _ := pem.Decode(pvk)
 	if block == nil {
 		return nil, errors.New("private key error")
 	}
@@ -173,5 +177,33 @@ func (r *RsaCipher) Decrypt(cipherData []byte) ([]byte, error) {
 		return nil, err
 	}
 	// 解密
-	return rsa.DecryptPKCS1v15(rand.Reader, priv, cipherData)
+	return rsa.DecryptPKCS1v15(rand.Reader, priv, enData)
+}
+
+type Cipher interface {
+	// origData 明文
+	// Encrypt 加密
+	Encrypt(origData []byte) ([]byte, error)
+	// cipherData 密文
+	// Encrypt 解密
+	Decrypt(cipherData []byte) ([]byte, error)
+}
+
+type PEMRsaCipher struct {
+	privateK []byte
+	publicK  []byte
+}
+
+func NewRsaCipher(privateK []byte, publicK []byte) *PEMRsaCipher {
+	return &PEMRsaCipher{privateK: privateK, publicK: publicK}
+}
+
+// 加密
+func (r *PEMRsaCipher) Encrypt(origData []byte) ([]byte, error) {
+	return encrypt(origData, r.publicK)
+}
+
+// 解密
+func (r *PEMRsaCipher) Decrypt(cipherData []byte) ([]byte, error) {
+	return decrypt(cipherData, r.privateK)
 }
