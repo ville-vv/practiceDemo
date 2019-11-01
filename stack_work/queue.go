@@ -5,26 +5,30 @@ import (
 	"sync"
 )
 
+func newNode(val interface{}) *node {
+	return &node{value: val}
+}
+
 func New() Queue {
-	return NewNodeQueue()
+	return newQueue()
 }
 
 type Queue interface {
-	Pop() *Node
-	Push(interface{}) error
-	Shift() *Node
+	Pop() *node
+	Push(*node) error
+	Shift() *node
 	Length() int64
 }
 
-type NodeQueue struct {
+type queue struct {
 	lock     sync.Mutex
-	head     *Node
-	rear     *Node
+	head     *node
+	rear     *node
 	length   int64
 	capacity int64
 }
 
-func NewNodeQueue(args ...interface{}) *NodeQueue {
+func newQueue(args ...interface{}) *queue {
 	max := int64(100000000)
 	if len(args) > 0 {
 		switch args[0].(type) {
@@ -34,12 +38,11 @@ func NewNodeQueue(args ...interface{}) *NodeQueue {
 			max = int64(args[0].(int))
 		}
 	}
-	return &NodeQueue{
+	return &queue{
 		capacity: max,
 	}
 }
-
-func (sel *NodeQueue) Pop() *Node {
+func (sel *queue) Pop() *node {
 	sel.lock.Lock()
 	defer sel.lock.Unlock()
 	if sel.length <= 0 {
@@ -53,7 +56,7 @@ func (sel *NodeQueue) Pop() *Node {
 	val.Next = nil
 	return val
 }
-func (sel *NodeQueue) Shift() *Node {
+func (sel *queue) Shift() *node {
 	sel.lock.Lock()
 	defer sel.lock.Unlock()
 
@@ -74,14 +77,14 @@ func (sel *NodeQueue) Shift() *Node {
 	sel.length--
 	return val
 }
-func (sel *NodeQueue) Push(v interface{}) error {
+func (sel *queue) Push(n *node) error {
 	if sel.length >= sel.capacity {
 		return errors.New("over max num for stack")
 	}
-	sel.push(&Node{value: v})
+	sel.push(n)
 	return nil
 }
-func (sel *NodeQueue) push(top *Node) {
+func (sel *queue) push(top *node) {
 	sel.lock.Lock()
 	defer sel.lock.Unlock()
 	if 0 == sel.length {
@@ -94,13 +97,23 @@ func (sel *NodeQueue) push(top *Node) {
 	sel.length++
 	return
 }
-func (sel *NodeQueue) Length() int64 {
+func (sel *queue) Length() int64 {
 	return sel.length
 }
-func (sel *NodeQueue) ResetPush(nd *Node) error {
-	if sel.length >= sel.capacity {
-		return errors.New("over max num for stack")
-	}
-	sel.push(nd)
-	return nil
+
+var (
+	defaultQueue = newQueue()
+)
+
+func Pop() *node {
+	return defaultQueue.Pop()
+}
+func Push(v interface{}) error {
+	return defaultQueue.Push(&node{value: v})
+}
+func Shift() *node {
+	return defaultQueue.Shift()
+}
+func Length() int64 {
+	return defaultQueue.Length()
 }

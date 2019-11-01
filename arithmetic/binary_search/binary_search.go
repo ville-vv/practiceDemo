@@ -9,7 +9,7 @@ import (
 )
 
 // 二分查找方法
-func Binary_search(a []int, b int) int {
+func BinarySearch(a []int, b int) int {
 	var (
 		low     int = 0
 		hight   int = len(a) - 1
@@ -51,6 +51,6 @@ func main() {
 	// bucket = []int{128162, 954425, 1902081, 2186258, 3024728, 4941318, 4965466, 5511528, 6122540, 6203300}
 	sort.Ints(bucket)
 	fmt.Println("数组：", bucket, n)
-	fmt.Println("查找到的位置：", Binary_search(bucket, 128162))
+	fmt.Println("查找到的位置：", BinarySearch(bucket, 128162))
 
 }
