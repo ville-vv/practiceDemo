@@ -3,10 +3,10 @@ package mysqlc
 import (
 	"database/sql"
 	"fmt"
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/vilsongwei/vilgo/vuid"
 	"os"
 	"time"
-	"vilgo/vuid"
-	_ "github.com/go-sql-driver/mysql"
 )
 
 type MysqlClient struct {
@@ -32,16 +32,17 @@ func NewMysqlClient(user string, password string, server_addr string, dbname str
 	return mc, nil
 }
 
-func(m *MysqlClient)Create(name string) (err error){
+func (m *MysqlClient) Create(name string) (err error) {
 	res, err := m.db.Exec(fmt.Sprintf("create database %s", name))
 	fmt.Println(res.RowsAffected())
 	return
 }
-func(m *MysqlClient)Drop(name string)(err error){
+func (m *MysqlClient) Drop(name string) (err error) {
 	res, err := m.db.Exec(fmt.Sprintf("drop database %s", name))
 	fmt.Println(res.RowsAffected())
 	return
 }
+
 // 关闭 mysql 连接
 func (m *MysqlClient) Close() {
 	m.db.Close()
@@ -87,7 +88,7 @@ func (m *MysqlClient) DeleteExample(id int) (err error) {
 	return
 }
 
-func (m *MysqlClient)InsertTestData() {
+func (m *MysqlClient) InsertTestData() {
 	file, err := os.OpenFile("mysql_test_data.txt", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
 	defer file.Close()
 	if err != nil {
@@ -112,7 +113,7 @@ func (m *MysqlClient)InsertTestData() {
 	file.WriteString(";")
 }
 
-func (m *MysqlClient)SelectForDulip() {
+func (m *MysqlClient) SelectForDulip() {
 	sqlbase := "SELECT * FROM vil_user.account WHERE user_no = %s;"
 	strList := []string{"73836420374208512", "73836419799588864", "73836419636011008", "73836419585679360", "73836419610845184", "73836424564318208", "73836424669175808", "73836424740478976", "73836424945999872",
 		"73836425277349888", "73836425378013184", "73836425625477120",
@@ -148,7 +149,7 @@ func CompOr(slist []string, cstr string) (out string) {
 	return out
 }
 
-func (m *MysqlClient)SelectWithIn() {
+func (m *MysqlClient) SelectWithIn() {
 	sqlbase := "SELECT * FROM vil_user.account WHERE user_no in(%s);"
 	strList := []string{"73836420374208512", "73836419799588864", "73836419636011008", "73836419585679360", "73836419610845184", "73836424564318208", "73836424669175808", "73836424740478976", "73836424945999872",
 		"73836425277349888", "73836425378013184", "73836425625477120",
@@ -166,7 +167,7 @@ func (m *MysqlClient)SelectWithIn() {
 
 }
 
-func (m *MysqlClient)SelectWithOr() {
+func (m *MysqlClient) SelectWithOr() {
 	sqlbase := "SELECT * FROM vil_user.account WHERE %s;"
 	strList := []string{"73836420374208512", "73836419799588864", "73836419636011008", "73836419585679360", "73836419610845184", "73836424564318208", "73836424669175808", "73836424740478976", "73836424945999872",
 		"73836425277349888", "73836425378013184", "73836425625477120",
@@ -183,4 +184,3 @@ func (m *MysqlClient)SelectWithOr() {
 	fmt.Printf("SelectWithOr:查询实际时间%d", end-start)
 
 }
-

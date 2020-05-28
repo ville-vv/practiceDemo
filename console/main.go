@@ -23,7 +23,7 @@ func getInput() {
 		//if len(Input) == 1 {
 		//	continue //如果用户输入的是一个空行就让用户继续输入。
 		//}
-		fmt.Printf("您输入的是:%s\n", Input)
+		fmt.Printf("您输入的是:%s\n", Input[:len(Input)-1])
 		if String == "stop" {
 			break
 		}
