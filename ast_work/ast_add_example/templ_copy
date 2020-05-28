@@ -1,0 +1,47 @@
+package ast_add_example
+
+import (
+	"context"
+	"fmt"
+)
+
+type Templ struct {
+	ch string
+}
+
+type DoAction interface {
+	Sum(a int, b int, ctx context.Context) int
+	Sub(a int, b int, ctx context.Context) int
+}
+
+func (*Templ) Sum(a int, b int, ctx context.Context) int {
+	fmt.Println("")
+	return a + b
+}
+
+func (*Templ) Sub(a int, b int, ctx context.Context) int {
+	return a - b
+}
+
+func Close(ctx context.Context) {
+}
+
+type Foo struct {
+	i int
+}
+
+func ADFB(ctx context.Context) {
+}
+
+type Bar interface {
+	Do(ctx context.Context) error
+}
+
+func (*Foo) Do(ctx context.Context) error {
+	sub := func(a int, b int) int {
+		return a - b
+	}
+	c := sub(4, 3)
+	fmt.Println("结果：", c)
+	return nil
+}
