@@ -183,6 +183,7 @@ func (t *TcpServer) NoChanHandler(conn net.Conn) {
 		_, err := conn.Read(data)
 		if err != nil {
 			fmt.Println("disconnect：", err)
+			conn.Close()
 			if err == io.EOF {
 				return
 			}
@@ -196,7 +197,7 @@ func (t *TcpServer) NoChanHandler(conn net.Conn) {
 			startTime = endTime
 			cout = 0
 		}
-		// conn.Write([]byte(fmt.Sprintf("Server Response %d", time.Now().UnixNano())))
+		//conn.Write([]byte(fmt.Sprintf("Server Response %d", time.Now().UnixNano())))
 	}
 }
 
