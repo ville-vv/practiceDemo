@@ -183,7 +183,7 @@ func (t *TcpServer) NoChanHandler(conn net.Conn) {
 		_, err := conn.Read(data)
 		if err != nil {
 			fmt.Println("disconnect：", err)
-			conn.Close()
+			// conn.Close()
 			if err == io.EOF {
 				return
 			}
