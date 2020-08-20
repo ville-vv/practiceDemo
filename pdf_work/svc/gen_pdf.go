@@ -43,39 +43,13 @@ func (g *GenPdf) AddPage() {
 
 func (g *GenPdf) Do() {
 	pdf := g.fpdf
-	pdf.AddPage()
-	g.Image("../Mount Shikhar.Png", 0, 0, g.width, g.height)
 	g.PageFoot()
 	pdf.AddPage()
-	g.H5(0, 0, true, "Mount Shikhar Financial Limited Loan Sanction Letter")
-	g.H5(0, 0, true, "Loan Sanction Letter")
-
-	g.P(`We thank you for choosing Mount Shikhar Financial Services Limited as your financier for short term personal loan. With reference to your above application, 
-we are pleased to inform you that, we have sanctioned you a loan facility as mentioned below.`)
-	//g.Ln(-1)
-	g.P(`We thank you for choosing Mount Shikhar Financial Services Limited as your financier for short term personal loan. With reference to your above application, 
-we are pleased to inform you that, we have sanctioned you a loan facility as mentioned below.`)
 
 	var kvOpt []*KvOpt
 	kvOpt = append(kvOpt, &KvOpt{
 		K: NewCellOpt("Our Application/Loan No.").SetBold(true).SetW(0),
 		V: NewCellOpt("- {{.OrderNo}}").SetBold(false),
-	})
-	kvOpt = append(kvOpt, &KvOpt{
-		K: NewCellOpt("Name of the Applicant").SetBold(true).SetW(0),
-		V: NewCellOpt("Our Application/Loan No.").SetBold(false),
-	})
-	kvOpt = append(kvOpt, &KvOpt{
-		K: NewCellOpt("Date -").SetBold(true).SetW(0),
-		V: NewCellOpt("- 16-MAR-18").SetBold(false),
-	})
-	kvOpt = append(kvOpt, &KvOpt{
-		K: NewCellOpt("Address").SetBold(true).SetW(0),
-		V: NewCellOpt("- DELHI,South West Delhi Rz 17/A Gali no 13 sitapuri part 1 New Delhi 110049").SetBold(false),
-	})
-	kvOpt = append(kvOpt, &KvOpt{
-		K: NewCellOpt("Subject:").SetBold(true).SetW(0),
-		V: NewCellOpt("Sanction Letter towards Loan Number Gt20200721003235. ").SetBold(false),
 	})
 
 	g.KVShow(&KvShowOpt{list: kvOpt})
