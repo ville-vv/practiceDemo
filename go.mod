@@ -8,6 +8,7 @@ require (
 	github.com/golang/protobuf v1.4.2
 	github.com/gorilla/websocket v1.2.1-0.20180605202552-5ed622c449da
 	github.com/grpc-ecosystem/grpc-gateway v1.14.5
+	github.com/jung-kurt/gofpdf v1.16.2
 	github.com/nsqio/go-nsq v1.0.8
 	github.com/siddontang/go-mysql v0.0.0-20200424072754-803944a6e4ea
 	github.com/soheilhy/cmux v0.1.5-0.20181025144106-8a8ea3c53959
