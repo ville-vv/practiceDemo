@@ -11,7 +11,7 @@ import (
 
 func main() {
 	//
-	cli := svc.NewUdpClient("193.112.47.13", "19999")
+	cli := svc.NewUdpClient("192.168.2.13", "19999")
 	_ = cli.SetLocalAddr("0.0.0.0:20000")
 	go func() {
 		for {
